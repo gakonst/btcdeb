@@ -157,6 +157,7 @@ opcodetype GetOpCode(const char* name)
 
     c(CHECKSIGFROMSTACK);
     c(CHECKSIGFROMSTACKVERIFY);
+    c(PUSHTXDATA);
 
     return OP_INVALIDOPCODE;
 }

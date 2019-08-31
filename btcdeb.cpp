@@ -817,6 +817,7 @@ static const char* opnames[] = {
     // covenant related opcodes
     "OP_CHECKSIGFROMSTACK",
     "OP_CHECKSIGFROMSTACKVERIFY",
+    "OP_PUSHTXDATA",
 
     // // template matching params
     // "OP_SMALLINTEGER",

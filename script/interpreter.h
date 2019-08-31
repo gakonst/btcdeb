@@ -119,6 +119,35 @@ enum
     // Signature checking assumes no sighash byte after the DER signature
     //
     SCRIPT_NO_SIGHASH_BYTE = (1U << 17),
+
+    // Support MSV0 and new opcode. Should not be used without WITNESS
+    //
+    SCRIPT_VERIFY_MSV0 = (1U << 18),
+};
+
+enum
+{
+    // External types
+    TXDATA_THIS_VIN_INDEX = 0,
+    TXDATA_VIN_SIZE = 1,
+    TXDATA_VOUT_SIZE = 2,
+    TXDATA_THIS_VIN_VALUE = 3,
+    TXDATA_FEE = 4,
+    TXDATA_VERSION = 5,
+    TXDATA_LOCKTIME = 6,
+    TXDATA_BASE_SIZE = 7,
+    TXDATA_TOTAL_SIZE = 8,
+    TXDATA_WEIGHT = 9,
+    TXDATA_VIN_PREVOUT = 10,
+    TXDATA_VIN_SEQUENCE = 11,
+    TXDATA_VIN = 12,
+    TXDATA_VOUT_VALUE = 13,
+    TXDATA_VOUT_SCRIPTPUBKEY = 14,
+    TXDATA_VOUT = 15,
+
+    // Internal types
+    TXDATA_VIN_PREVOUT_HASH = 200,
+    TXDATA_VIN_PREVOUT_N = 201,
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);
@@ -163,6 +192,12 @@ public:
          return false;
     }
 
+    virtual std::vector<unsigned char> PushTxData(const int& nType, const int& nIndex) const
+    {
+         std::vector<unsigned char> vchZero(0);
+         return vchZero;
+    }
+
     virtual ~BaseSignatureChecker() {}
 };
 
@@ -184,6 +219,7 @@ public:
     bool CheckSig(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override;
     bool CheckLockTime(const CScriptNum& nLockTime) const override;
     bool CheckSequence(const CScriptNum& nSequence) const override;
+    std::vector<unsigned char> PushTxData(const int& nType, const int& nIndex) const override;
 };
 
 using TransactionSignatureChecker = GenericTransactionSignatureChecker<CTransaction>;
