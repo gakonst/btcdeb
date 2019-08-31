@@ -814,6 +814,10 @@ static const char* opnames[] = {
     "OP_NOP9",
     "OP_NOP10",
 
+    // covenant related opcodes
+    "OP_CHECKSIGFROMSTACK",
+    "OP_CHECKSIGFROMSTACKVERIFY",
+
     // // template matching params
     // "OP_SMALLINTEGER",
     // "OP_PUBKEYS",

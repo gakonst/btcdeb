@@ -180,12 +180,20 @@ bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned i
     if (vchSig.size() == 0) {
         return true;
     }
-    if ((flags & (SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_STRICTENC)) != 0 && !IsValidSignatureEncoding(vchSig)) {
+
+    bool no_hash_byte = (flags & SCRIPT_NO_SIGHASH_BYTE) == SCRIPT_NO_SIGHASH_BYTE;
+    std::vector<unsigned char> vchSigCopy(vchSig.begin(), vchSig.begin() + vchSig.size());
+    // Push a dummy sighash byte to pass checks
+    if (no_hash_byte) {
+        vchSigCopy.push_back(SIGHASH_ALL);
+    }
+
+    if ((flags & (SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_LOW_S | SCRIPT_VERIFY_STRICTENC)) != 0 && !IsValidSignatureEncoding(vchSigCopy)) {
         return set_error(serror, SCRIPT_ERR_SIG_DER);
-    } else if ((flags & SCRIPT_VERIFY_LOW_S) != 0 && !IsLowDERSignature(vchSig, serror)) {
+    } else if ((flags & SCRIPT_VERIFY_LOW_S) != 0 && !IsLowDERSignature(vchSigCopy, serror)) {
         // serror is set
         return false;
-    } else if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsDefinedHashtypeSignature(vchSig)) {
+    } else if ((flags & SCRIPT_VERIFY_STRICTENC) != 0 && !IsDefinedHashtypeSignature(vchSigCopy)) {
         return set_error(serror, SCRIPT_ERR_SIG_HASHTYPE);
     }
     return true;
@@ -449,7 +457,6 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
             vch1.insert(vch1.end(), vch2.begin(), vch2.end());
             popstack(stack);
         } break;
-
 
         case OP_NOP1: case OP_NOP4: case OP_NOP5:
         case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
@@ -1067,6 +1074,42 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
                 else
                     return set_error(serror, SCRIPT_ERR_CHECKMULTISIGVERIFY);
             }
+        }
+        break;
+        case OP_CHECKSIGFROMSTACK:
+        case OP_CHECKSIGFROMSTACKVERIFY:
+        {
+            // (sig data pubkey  -- bool)
+            if (stack.size() < 3)
+                return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+            valtype &vchSig = stacktop(-3);
+            valtype &vchData = stacktop(-2);
+            valtype &vchPubKey = stacktop(-1);
+
+            // Sigs from stack have no hash byte ever
+            if (!CheckSignatureEncoding(vchSig, (flags | SCRIPT_NO_SIGHASH_BYTE), serror) || !CheckPubKeyEncoding(vchPubKey, flags, sigversion, serror))
+            {
+                //serror is set
+                return false;
+            }
+
+            valtype vchHash(32);
+            CSHA256().Write(vchData.data(), vchData.size()).Finalize(vchHash.data());
+            uint256 hash(vchHash);
+
+            CPubKey pubkey(vchPubKey);
+            bool fSuccess = pubkey.Verify(hash, vchSig);
+
+            popstack(stack);
+            popstack(stack);
+            popstack(stack);
+            stack.push_back(fSuccess ? vchTrue : vchFalse);
+            if (opcode == OP_CHECKSIGFROMSTACKVERIFY)
+                popstack(stack);
+
+            if (!fSuccess)
+                return set_error(serror, SCRIPT_ERR_CHECKSIGVERIFY);
         }
         break;
 

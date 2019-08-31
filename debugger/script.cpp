@@ -155,6 +155,9 @@ opcodetype GetOpCode(const char* name)
     c(NOP9);
     c(NOP10);
 
+    c(CHECKSIGFROMSTACK);
+    c(CHECKSIGFROMSTACKVERIFY);
+
     return OP_INVALIDOPCODE;
 }
 
@@ -254,6 +257,8 @@ void GetStackFeatures(opcodetype opcode, size_t& spawns, size_t& slays)
     case OP_CHECKSIGVERIFY         : _(0, 2);
     case OP_CHECKMULTISIG          : _(1, 3); // this depends on k-of-n's k and n
     case OP_CHECKMULTISIGVERIFY    : _(0, 3); // -'-
+    case OP_CHECKSIGFROMSTACK      : _(1, 3); // pop message/sig/pubkey push true/false
+    case OP_CHECKSIGFROMSTACKVERIFY    : _(0, 3); //
 
     // expansion
     case OP_NOP1                   : _(0, 0);
