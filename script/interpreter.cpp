@@ -294,7 +294,7 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
     if (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT)
         return set_error(serror, SCRIPT_ERR_OP_COUNT);
 
-    if (opcode == OP_CAT ||
+    if (
         opcode == OP_SUBSTR ||
         opcode == OP_LEFT ||
         opcode == OP_RIGHT ||
@@ -431,6 +431,25 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
 
             break;
         }
+        //
+        // Byte string operations
+        //
+        case OP_CAT: {
+            // (x1 x2 -- out)
+            if (stack.size() < 2) {
+                return set_error(
+                    serror, ScriptError::INVALID_STACK_OPERATION);
+            }
+            valtype &vch1 = stacktop(-2);
+            valtype &vch2 = stacktop(-1);
+            if (vch1.size() + vch2.size() >
+                MAX_SCRIPT_ELEMENT_SIZE) {
+                return set_error(serror, ScriptError::PUSH_SIZE);
+            }
+            vch1.insert(vch1.end(), vch2.begin(), vch2.end());
+            popstack(stack);
+        } break;
+
 
         case OP_NOP1: case OP_NOP4: case OP_NOP5:
         case OP_NOP6: case OP_NOP7: case OP_NOP8: case OP_NOP9: case OP_NOP10:
