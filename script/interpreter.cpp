@@ -14,6 +14,8 @@
 #include <pubkey.h>
 #include <debugger/script.h>
 #include <uint256.h>
+#include <primitives/transaction.h>
+#include <merkle.h>
 
 bool CastToBool(const valtype& vch)
 {
@@ -1105,11 +1107,12 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
             popstack(stack);
             popstack(stack);
             stack.push_back(fSuccess ? vchTrue : vchFalse);
-            if (opcode == OP_CHECKSIGFROMSTACKVERIFY)
+            if (opcode == OP_CHECKSIGFROMSTACKVERIFY) {
                 popstack(stack);
 
-            if (!fSuccess)
-                return set_error(serror, SCRIPT_ERR_CHECKSIGVERIFY);
+                if (!fSuccess)
+                    return set_error(serror, SCRIPT_ERR_CHECKSIGVERIFY);
+            }
         }
         break;
         case OP_PUSHTXDATA:
@@ -1153,6 +1156,42 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
                     }
                     if (stack.back().size() > MAX_SCRIPT_ELEMENT_SIZE)
                         return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
+                }
+                break;
+            case OP_CHECKMERKLEBRANCH:
+            case OP_CHECKMERKLEBRANCHVERIFY:
+                {
+                    if (stack.size() < 2)
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+
+                    valtype vchRoot  = stacktop(-1);
+                    valtype vchProof = stacktop(-2);
+
+                    int treeDepth = vchProof.size() / 32;
+                    int cursor = 0;
+                    std::vector<uint256> m_proof;
+                    for(int i=0; i < treeDepth; i++){
+                        std::vector<unsigned char> proofElement( vchProof.begin() + cursor, vchProof.begin() + cursor + 32 );
+                        cursor += 32;
+                        m_proof.push_back(uint256(proofElement));
+                    }
+
+                    for (uint256 x : m_proof)
+                        cout << x.ToString() << endl;
+
+                    bool mut;
+                    uint256 calculatedRoot = ComputeMerkleRoot(m_proof, &mut);
+                    const uint256 root = uint256(vchRoot);
+                    bool fSuccess = root == calculatedRoot;
+                    popstack(stack);
+                    popstack(stack);
+                    stack.push_back(fSuccess ? vchTrue : vchFalse);
+                    if (opcode == OP_CHECKMERKLEBRANCHVERIFY) {
+                        popstack(stack);
+
+                        if (!fSuccess)
+                            return set_error(serror, MERKLEBRANCHVERIFY);
+                    }
                 }
                 break;
 

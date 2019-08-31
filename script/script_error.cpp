@@ -95,6 +95,18 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Signature is found in scriptCode";
         case SCRIPT_ERR_UNKNOWN_ERROR:
         case SCRIPT_ERR_ERROR_COUNT:
+        case CHECKSIGFROMSTACKVERIFY:
+            return "Signature from stack verification failed";
+        case MERKLEBRANCHVERIFY:
+            return "Merkle proof verification failed";
+        case SCRIPT_ERR_BAD_DECODE_ARG:
+            return "Failed to decode stack item for current opcode";
+        case SCRIPT_ERR_BAD_DECODE_ARG1:
+            return "Failed to decode top stack item for current opcode";
+        case SCRIPT_ERR_BAD_DECODE_ARG2:
+            return "Failed to decode 2nd stack item for current opcode";
+        case SCRIPT_ERR_BAD_DECODE_ARG3:
+            return "Failed to decode 3rd stack item for current opcode";
         default: break;
     }
     return "unknown error";

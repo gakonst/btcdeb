@@ -141,6 +141,8 @@ const char* GetOpName(opcodetype opcode)
     case OP_CHECKSIGFROMSTACK    : return "OP_CHECKSIGFROMSTACK";
     case OP_CHECKSIGFROMSTACKVERIFY    : return "OP_CHECKSIGFROMSTACKVERIFY";
     case OP_PUSHTXDATA             : return "OP_PUSHTXDATA";
+    case OP_CHECKMERKLEBRANCH             : return "OP_CHECKMERKLEBRANCH";
+    case OP_CHECKMERKLEBRANCHVERIFY             : return "OP_CHECKMERKLEBRANCHVERIFY";
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 

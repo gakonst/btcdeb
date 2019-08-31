@@ -158,6 +158,8 @@ opcodetype GetOpCode(const char* name)
     c(CHECKSIGFROMSTACK);
     c(CHECKSIGFROMSTACKVERIFY);
     c(PUSHTXDATA);
+    c(CHECKMERKLEBRANCH);
+    c(CHECKMERKLEBRANCHVERIFY);
 
     return OP_INVALIDOPCODE;
 }
@@ -260,6 +262,8 @@ void GetStackFeatures(opcodetype opcode, size_t& spawns, size_t& slays)
     case OP_CHECKMULTISIGVERIFY    : _(0, 3); // -'-
     case OP_CHECKSIGFROMSTACK      : _(1, 3); // pop message/sig/pubkey push true/false
     case OP_CHECKSIGFROMSTACKVERIFY    : _(0, 3); //
+    case OP_CHECKMERKLEBRANCH      : _(1, 3); // pop proof/root/index push true/false
+    case OP_CHECKMERKLEBRANCHVERIFY    : _(0, 3); //
 
     // expansion
     case OP_NOP1                   : _(0, 0);

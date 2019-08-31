@@ -185,12 +185,14 @@ enum opcodetype
     OP_CHECKSIGFROMSTACKVERIFY = 0xbb,
 
     OP_PUSHTXDATA = 0xbc,
+    OP_CHECKMERKLEBRANCH = 0xbd,
+    OP_CHECKMERKLEBRANCHVERIFY = 0xbe,
 
     OP_INVALIDOPCODE = 0xff,
 };
 
 // Maximum value that an opcode can be
-static const unsigned int MAX_OPCODE = OP_PUSHTXDATA;
+static const unsigned int MAX_OPCODE = OP_CHECKMERKLEBRANCHVERIFY;
 
 const char* GetOpName(opcodetype opcode);
 

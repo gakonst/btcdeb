@@ -123,6 +123,11 @@ enum
     // Support MSV0 and new opcode. Should not be used without WITNESS
     //
     SCRIPT_VERIFY_MSV0 = (1U << 18),
+
+    // Support MERKLEBRANCHVERIFY
+    //
+    // See BIP116 for details
+    SCRIPT_VERIFY_MERKLEBRANCHVERIFY = (1U << 19),
 };
 
 enum

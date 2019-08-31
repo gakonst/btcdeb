@@ -818,6 +818,8 @@ static const char* opnames[] = {
     "OP_CHECKSIGFROMSTACK",
     "OP_CHECKSIGFROMSTACKVERIFY",
     "OP_PUSHTXDATA",
+    "OP_CHECKMERKLEBRANCH",
+    "OP_CHECKMERKLEBRANCHVERIFY",
 
     // // template matching params
     // "OP_SMALLINTEGER",
