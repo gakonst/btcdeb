@@ -11,7 +11,10 @@
 #include <primitives/transaction.h>
 // #include <primitives/block.h>
 #include <uint256.h>
+#include <debugger/interpreter.h>
+#include<iostream>
 
+unsigned char* ComputeMerkleRootOrdered(valtype leaf, std::vector<valtype> hashes, arith_uint256 index);
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated = nullptr);
 
 /*

@@ -2,10 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <arith_uint256.h>
 #include <merkle.h>
 #include <hash.h>
 #include <utilstrencodings.h>
 #include<iostream>
+#include <debugger/interpreter.h>
+
+using namespace std;
 
 /*     WARNING! If you're reading this because you're learning about crypto
        and/or designing a new system that will use merkle trees, keep in mind
@@ -43,10 +47,28 @@
        root.
 */
 
+unsigned char* ComputeMerkleRootOrdered(valtype leaf, std::vector<valtype> hashes, arith_uint256 index) {
+    unsigned char* computedHash = &leaf[0];
+
+    arith_uint256 one = arith_uint256(1);
+    for (std::vector<unsigned char> element : hashes) {
+        CSHA256 hasher; // Need to reinitialize the hasher in each loop
+        if ((index & one) == 0) {
+            hasher.Write(computedHash, 32);
+            hasher.Write(&element[0], 32);
+        } else {
+            hasher.Write(&element[0], 32);
+            hasher.Write(computedHash, 32);
+        }
+        hasher.Finalize(computedHash);
+        index = index / arith_uint256(2);
+    }
+
+    return computedHash;
+}
 
 uint256 ComputeMerkleRoot(std::vector<uint256> hashes, bool* mutated) {
     bool mutation = false;
-    char buffer[50];
     while (hashes.size() > 1) {
         if (mutated) {
             for (size_t pos = 0; pos + 1 < hashes.size(); pos += 2) {

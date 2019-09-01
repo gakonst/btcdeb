@@ -14,8 +14,12 @@
 #include <pubkey.h>
 #include <debugger/script.h>
 #include <uint256.h>
+#include <arith_uint256.h>
 #include <primitives/transaction.h>
 #include <merkle.h>
+
+using namespace std;
+#include <iostream>
 
 bool CastToBool(const valtype& vch)
 {
@@ -1161,28 +1165,32 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
             case OP_CHECKMERKLEBRANCH:
             case OP_CHECKMERKLEBRANCHVERIFY:
                 {
-                    if (stack.size() < 2)
+                    if (stack.size() < 4)
                         return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
 
-                    valtype vchRoot  = stacktop(-1);
-                    valtype vchProof = stacktop(-2);
+                    valtype vchIndex = stacktop(-1);
+                    valtype vchLeaf = stacktop(-2);
+                    valtype vchRoot  = stacktop(-3);
+                    valtype vchProof = stacktop(-4);
 
                     int treeDepth = vchProof.size() / 32;
                     int cursor = 0;
-                    std::vector<uint256> m_proof;
+                    std::vector<valtype> m_proof;
                     for(int i=0; i < treeDepth; i++){
-                        std::vector<unsigned char> proofElement( vchProof.begin() + cursor, vchProof.begin() + cursor + 32 );
+                        valtype proofElement( vchProof.begin() + cursor, vchProof.begin() + cursor + 32 );
                         cursor += 32;
-                        m_proof.push_back(uint256(proofElement));
+                        m_proof.push_back(proofElement);
                     }
 
-                    for (uint256 x : m_proof)
-                        cout << x.ToString() << endl;
+                    arith_uint256 index = arith_uint256(reinterpret_cast<const char*>(&vchIndex[0]));
+                    unsigned char * calculatedRoot = ComputeMerkleRootOrdered(vchLeaf, m_proof, index);
 
-                    bool mut;
-                    uint256 calculatedRoot = ComputeMerkleRoot(m_proof, &mut);
-                    const uint256 root = uint256(vchRoot);
-                    bool fSuccess = root == calculatedRoot;
+                    uint256 a = uint256S(reinterpret_cast<const char*>(&vchRoot[0]));
+                    uint256 b = uint256S(reinterpret_cast<const char*>(calculatedRoot));
+                    bool fSuccess = a == b;
+
+                    popstack(stack);
+                    popstack(stack);
                     popstack(stack);
                     popstack(stack);
                     stack.push_back(fSuccess ? vchTrue : vchFalse);
@@ -1205,6 +1213,8 @@ bool StepScript(ScriptExecutionEnvironment& env, CScriptIter& pc, CScript* local
 
     return true;
 }
+
+
 
 ScriptExecutionEnvironment::ScriptExecutionEnvironment(std::vector<std::vector<unsigned char> >& stack_in, const CScript& script_in, unsigned int flags_in, const BaseSignatureChecker& checker_in)
 : script(script_in)
